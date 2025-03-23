@@ -13,6 +13,7 @@ const MAPPING = {
   clock: "access-time",
   "location.fill": "location-on",
   "arrowtriangle.right.fill": "arrow-right",
+  plus: "add",
 } as Partial<
   Record<
     import("expo-symbols").SymbolViewProps["name"],
@@ -27,7 +28,7 @@ export type IconSymbolName = keyof typeof MAPPING;
  *
  * Icon `name`s are based on SFSymbols and require manual mapping to MaterialIcons.
  */
-export function IconSymbol({
+export function Icon({
   name,
   size = 24,
   color,

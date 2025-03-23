@@ -16,7 +16,12 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.schmalliee.placesync"
+      "package": "com.schmalliee.placesync",
+      "config": {
+        "googleMaps": {
+          "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -43,7 +48,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "6f619a2b-4e55-4bb6-802c-c64e8499a98b"
+        "projectId": "54fcb860-8ace-4e64-ad80-c83015a0cba9"
       }
     }
   }
