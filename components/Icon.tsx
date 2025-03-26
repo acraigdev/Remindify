@@ -11,6 +11,7 @@ const MAPPING = {
   // See MaterialIcons here: https://icons.expo.fyi
   // See SF Symbols in the SF Symbols app on Mac.
   clock: "access-time",
+  checkmark: "check",
   "location.fill": "location-on",
   "arrowtriangle.right.fill": "arrow-right",
   plus: "add",

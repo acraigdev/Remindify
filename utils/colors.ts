@@ -1,11 +1,13 @@
 export const Colors = {
   light: {
     primary: "#64558e",
-    secondary: "#fef7ff",
+    secondary: "#e8def7",
     tertiary: "#ece6f0",
-    border: "#e5e1e6",
+    border: "#575656",
+    borderLight: "#8a8888",
     text: "#000000",
-    background: "#fff",
+    background: "#ffffff",
+    backgroundTint: "#fef7ff",
   },
   dark: {
     primary: "#64558e",

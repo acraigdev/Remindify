@@ -1,14 +1,16 @@
 export type Nullable<T> = null | T;
 
-export type LocationAlert = {
-  id: string | number;
+export type Flow = "enter" | "exit";
+
+export type LocationReminder = {
+  id: number;
   type: "location";
   title: string;
-  flow: "enter" | "exit";
+  flow: Flow;
   placeId: string;
 };
 
-export type Time = {
+export type TimeAlert = {
   id: string;
   type: "time";
   title: string;

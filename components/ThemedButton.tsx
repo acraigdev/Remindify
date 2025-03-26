@@ -12,14 +12,17 @@ export function ThemedButton({ label, style, ...rest }: ThemedButtonProps) {
     <Pressable
       {...rest}
       style={{
-        backgroundColor: theme.tertiary,
+        backgroundColor: theme.primary,
         padding: 15,
-        borderRadius: 20,
+        borderRadius: 50,
         ...(typeof style === "object" && { ...style }),
       }}
     >
       {typeof label === "string" ? (
-        <ThemedText type={["title"]} style={{ color: theme.primary }}>
+        <ThemedText
+          type={["title"]}
+          style={{ color: theme.tertiary, textAlign: "center" }}
+        >
           {label}
         </ThemedText>
       ) : (

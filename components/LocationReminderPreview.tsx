@@ -1,14 +1,19 @@
 import { View, StyleSheet, Pressable } from "react-native";
 import { Icon } from "./Icon";
-import { LocationAlert } from "@/utils/types";
+import { LocationReminder } from "@/utils/types";
 import { useGetLocation } from "@/hooks/useGetLocation";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { ThemedText } from "./ThemedText";
+import { router } from "expo-router";
 
-export function LocationReminder({ location }: { location: LocationAlert }) {
+export function LocationReminderPreview({
+  reminder,
+}: {
+  reminder: LocationReminder;
+}) {
   const theme = useThemeColor();
   const loc = useGetLocation({
-    placeId: location.placeId,
+    placeId: reminder.placeId,
   });
 
   return (
@@ -19,11 +24,18 @@ export function LocationReminder({ location }: { location: LocationAlert }) {
         ...styles.container,
       }}
     >
-      <Pressable onPress={() => console.log("Clicked")}>
+      <Pressable
+        onPress={() =>
+          router.push({
+            pathname: "/CreateLocationReminder",
+            params: { id: reminder.id },
+          })
+        }
+      >
         <View style={styles.inside}>
           <Icon
             name="location.fill"
-            color={theme.secondary}
+            color={theme.background}
             style={{
               backgroundColor: theme.primary,
               borderRadius: 20,
@@ -31,9 +43,9 @@ export function LocationReminder({ location }: { location: LocationAlert }) {
             }}
           />
           <View style={{ flexShrink: 1 }}>
-            <ThemedText type="defaultSemiBold">{location.title}</ThemedText>
+            <ThemedText type="defaultSemiBold">{reminder.title}</ThemedText>
             <ThemedText>{`${
-              location.flow === "enter" ? "Arrive at" : "Leaving"
+              reminder.flow === "enter" ? "Arrive at" : "Leaving"
             } ${loc?.displayName?.text ?? ""}`}</ThemedText>
           </View>
           <Icon
