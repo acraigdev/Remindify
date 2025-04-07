@@ -1,73 +1,74 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Platform, View } from "react-native";
+import { Platform } from "react-native";
 import {
   GooglePlacesAutocomplete,
-  Place,
-  Point,
+  GooglePlacesAutocompleteRef,
 } from "react-native-google-places-autocomplete";
-import { Icon } from "./Icon";
 import { ThemedInput } from "./ThemedInput";
-import { forwardRef, useEffect, useState } from "react";
-import * as Location from "expo-location";
+import { forwardRef, useEffect, useRef } from "react";
 import { Nullable } from "@/utils/types";
 import { ThemedText } from "./ThemedText";
+import { useReminderContext } from "@/utils/ReminderContext";
 
-// Prepopulate with either setAddressText or predefined or preProcess
-// Current location doesnt work
 type GoogleSearchProps = {
-  currentLocation: Nullable<Point>;
   onSearchError: (e: Nullable<string>) => void;
   placeId: Nullable<string>;
   onPlaceIdSelect: (id: Nullable<string>) => void;
 };
 
-// Todo: this is searching when typing the title??
+// Todo: this is searching when typing the title on web
+// Look into non-google alternatives
 
 export function GooglePlacesSearch({
-  currentLocation,
   onSearchError,
   placeId,
   onPlaceIdSelect,
 }: GoogleSearchProps) {
   const theme = useThemeColor();
+  const ref = useRef<Nullable<GooglePlacesAutocompleteRef>>(null);
+  const { places } = useReminderContext();
+  const currentPlace = placeId ? places[placeId] : null;
 
   const key =
     Platform.OS === "web"
       ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_WEB
       : process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID;
+  console.log(key);
+
+  useEffect(() => {
+    if (currentPlace && currentPlace.formattedAddress)
+      ref.current?.setAddressText(currentPlace.formattedAddress);
+  }, []);
   return (
     <>
       <GooglePlacesAutocomplete
+        ref={ref}
         placeholder="Location"
         onPress={(data, details = null) => {
           onSearchError(null);
           onPlaceIdSelect(data.place_id);
-          console.log("Pressed", data, details);
         }}
-        onFail={(e) => onSearchError(e)}
-        onNotFound={() => {
-          onSearchError(null);
-          console.log("Not found");
+        preProcess={(query) => {
+          if (query?.length < 4) return "";
+          return query;
         }}
+        onFail={(e) => {
+          console.log(e);
+          onSearchError(e);
+        }}
+        listEmptyComponent={
+          <ThemedText style={{ paddingHorizontal: 10, paddingVertical: 5 }}>
+            No results
+          </ThemedText>
+        }
+        currentLocation={true}
+        currentLocationLabel="Current location"
+        nearbyPlacesAPI="GoogleReverseGeocoding"
         query={{
           key,
           language: "en",
         }}
-        // GooglePlacesDetailsQuery={{
-        //   fields: "name,geometry",
-        // }}
-        // fetchDetails={true}
         debounce={1000}
-        // predefinedPlaces={
-        //   currentLocation
-        //     ? [
-        //         {
-        //           description: "Current location",
-        //           geometry: { location: currentLocation },
-        //         },
-        //       ]
-        //     : []
-        // }
         requestUrl={{
           useOnPlatform: "web",
           url: "https://proxy-nhvsjqhtua-uc.a.run.app/https://maps.googleapis.com/maps/api",
@@ -78,27 +79,13 @@ export function GooglePlacesSearch({
         styles={{
           container: {
             width: "100%",
-            backgroundColor: theme.background,
             zIndex: 100,
-          },
-          textInput: {
-            borderWidth: 1,
-            borderRadius: 10,
-            borderColor: theme.border,
-            height: 60,
-            backgroundColor: "red",
-            fontSize: 16,
-            placeholderTextColor: theme.borderLight,
           },
           listView: {
             borderWidth: 1,
             borderRadius: 10,
             borderColor: theme.border,
             marginTop: 4,
-          },
-          row: {
-            borderBottomWidth: 1,
-            borderColor: theme.borderLight,
           },
         }}
       />
@@ -108,12 +95,20 @@ export function GooglePlacesSearch({
 
 // eslint-disable-next-line react/display-name
 const Input = forwardRef(({ style, ...props }, ref) => {
+  const theme = useThemeColor();
+
   return (
     <ThemedInput
       ref={ref}
       {...props}
       icon="location.fill"
       placeholder="Location"
+      style={{
+        width: "90%",
+        color: theme.text,
+        fontSize: 16,
+        height: 60,
+      }}
     />
   );
 });

@@ -9,6 +9,8 @@ interface ThemedInputProps extends TextInputProps {
   onChangeText?: (val: string) => void;
 }
 
+//https://github.com/FaridSafi/react-native-google-places-autocomplete/issues/654
+
 export const ThemedInput = forwardRef(
   ({ icon, ...rest }: ThemedInputProps, ref) => {
     const theme = useThemeColor();
@@ -33,13 +35,13 @@ export const ThemedInput = forwardRef(
         <TextInput
           ref={ref}
           style={{
-            color: theme.border,
+            color: theme.text,
             fontSize: 16,
             height: 60,
             width: "100%",
           }}
           {...rest}
-          placeholderTextColor={theme.borderLight}
+          placeholderTextColor={theme.secondaryText}
         />
       </View>
     );

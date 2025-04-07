@@ -2,15 +2,17 @@ import { Icon } from "@/components/Icon";
 import { LocationReminderPreview } from "@/components/LocationReminderPreview";
 import { ThemedButton } from "@/components/ThemedButton";
 import { ThemedText } from "@/components/ThemedText";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useStorageContext } from "@/utils/StorageContext";
+import { useReminderContext } from "@/utils/ReminderContext";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 
 export default function Index() {
   const router = useRouter();
   const theme = useThemeColor();
-  const { reminders } = useStorageContext();
+  const { reminders } = useReminderContext();
+  useNotifications();
 
   return (
     <View

@@ -2,23 +2,22 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { queryClient } from "@/utils/queryClient";
 import { Stack } from "expo-router";
 import React from "react";
-import { useColorScheme } from "react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { StorageContextProvider } from "@/utils/StorageContext";
+import { StatusBar } from "expo-status-bar";
+import { ReminderContextProvider } from "@/utils/ReminderContext";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const theme = useThemeColor();
   return (
-    //colorScheme === "dark" ? DarkTheme :
     <QueryClientProvider client={queryClient}>
-      <StorageContextProvider>
+      <ReminderContextProvider>
+        <StatusBar />
         <Stack
           screenOptions={{
             headerStyle: {
-              backgroundColor: "#141118",
+              backgroundColor: theme.background,
             },
-            headerTintColor: theme.background,
+            headerTintColor: theme.text,
             headerTitleStyle: {
               fontWeight: "bold",
               fontSize: 20,
@@ -37,7 +36,7 @@ export default function RootLayout() {
             options={{ title: "Location reminder" }}
           />
         </Stack>
-      </StorageContextProvider>
+      </ReminderContextProvider>
     </QueryClientProvider>
   );
 }

@@ -1,28 +1,22 @@
-import { MapView } from "@/components/GoogleMapView";
 import { GooglePlacesSearch } from "@/components/GooglePlacesSearch";
-import { Icon } from "@/components/Icon";
 import { SegmentedButton } from "@/components/SegmentedButton";
 import { ThemedInput } from "@/components/ThemedInput";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Flow, LocationReminder, Nullable } from "@/utils/types";
-import React, { useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, Platform } from "react-native";
+import { Flow, Nullable, ReminderType } from "@/utils/types";
+import React, { Suspense, useState } from "react";
+import { View, ScrollView, Platform } from "react-native";
 import * as Location from "expo-location";
 import { ThemedButton } from "@/components/ThemedButton";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
-import { Point } from "react-native-google-places-autocomplete";
-import { useGetLocation } from "@/hooks/useGetLocation";
-import { useStorageContext } from "@/utils/StorageContext";
-
-// TODO: Validate on save
-// AsyncStorage.setItem('location', JSON.stringify(json));
-// Geofencing  - 100 ON ANDRIOID 20 on ios
+import uuid from "react-native-uuid";
+import { GetLocationPermissions } from "@/components/GetLocationPermissions";
+import { useReminderContext } from "@/utils/ReminderContext";
+import { ThemedModal } from "@/components/ThemedModal";
 
 export default function CreateLocationReminder() {
   const theme = useThemeColor();
-  const { reminders, upsertReminder } = useStorageContext();
+  const { reminders, upsertReminder, removeReminder } = useReminderContext();
   const { id: editReminderId } = useLocalSearchParams();
   const editLocation =
     editReminderId && typeof editReminderId === "string"
@@ -30,53 +24,43 @@ export default function CreateLocationReminder() {
       : null;
 
   const [searchError, setSearchError] = useState<Nullable<string>>(null);
+  const [submitError, setSubmitError] = useState<Nullable<string>>(null);
 
   const [reminderName, setReminderName] = useState<Nullable<string>>(
     editLocation?.title ?? null
   );
-  const [reminderType, setReminderType] = useState<Flow>(
-    editLocation?.flow ?? "enter"
+  const [reminderFlow, setReminderFlow] = useState<Flow>(
+    editLocation?.flow ?? Flow.enter
   );
   const [placeId, setPlaceId] = useState<Nullable<string>>(
     editLocation?.placeId ?? null
   );
-  const [isFailedPermissions, setIsFailedPermissions] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<Nullable<Point>>(null);
 
-  useEffect(() => {
-    async function getCurrentLocation() {
-      let { status } = await Location.requestBackgroundPermissionsAsync();
-      if (status !== "granted") {
-        setIsFailedPermissions(true);
-        return;
-      }
+  // Polyfill needed for Google Autofill component
+  Location.installWebGeolocationPolyfill();
 
-      let location = await Location.getCurrentPositionAsync({});
-      setCurrentLocation({
-        lat: location.coords.latitude,
-        lng: location.coords.longitude,
-      });
+  const addLocationReminder = async () => {
+    if (!reminderName || !placeId) {
+      setSubmitError("Reminders must have a selected location and a name.");
+      return;
     }
 
-    getCurrentLocation();
-  }, []);
+    const index = editLocation ? editLocation.id : uuid.v4();
 
-  const addLocationReminder = () => {
-    const index = editLocation
-      ? editLocation.id
-      : Number(Object.keys(reminders)?.at(-1) ?? 0) + 1;
-
-    // TODO: need a better id format so I can tell if a reminder already exists
-    // TODO: enum
-    upsertReminder({
+    await upsertReminder({
       id: index,
-      type: "location",
+      type: ReminderType.location,
       title: reminderName,
-      flow: reminderType,
+      flow: reminderFlow,
       placeId,
     });
-    router.push("/");
+    router.dismissAll();
+    router.replace("/");
   };
+
+  const isLimit =
+    (Platform.OS === "android" && Object.keys(reminders).length === 100) ||
+    (Platform.OS === "ios" && Object.keys(reminders).length === 20);
 
   return (
     <View
@@ -88,6 +72,30 @@ export default function CreateLocationReminder() {
         justifyContent: "space-between",
       }}
     >
+      {isLimit && (
+        <ThemedModal
+          onClose={() => {
+            router.dismissAll();
+            router.replace("/");
+          }}
+        >
+          <ThemedText style={{ textAlign: "center", marginBottom: 10 }}>
+            You have reached the maximum number of location reminders for your
+            device.
+          </ThemedText>
+          <ThemedButton
+            type="secondary"
+            label="Cancel"
+            onPress={() => {
+              router.dismissAll();
+              router.replace("/");
+            }}
+          />
+        </ThemedModal>
+      )}
+      <Suspense>
+        <GetLocationPermissions />
+      </Suspense>
       <View
         style={{
           display: "flex",
@@ -103,15 +111,20 @@ export default function CreateLocationReminder() {
           style={{ width: "100%" }}
         >
           <GooglePlacesSearch
-            currentLocation={currentLocation}
             onSearchError={(e) => setSearchError(e)}
             placeId={placeId}
-            onPlaceIdSelect={(id) => setPlaceId(id)}
+            onPlaceIdSelect={(id) => {
+              setSubmitError(null);
+              setPlaceId(id);
+            }}
           />
         </ScrollView>
         <ThemedInput
           value={reminderName ?? ""}
-          onChangeText={setReminderName}
+          onChangeText={(name) => {
+            setSubmitError(null);
+            setReminderName(name);
+          }}
           placeholder="Reminder name"
         />
         <View style={{ width: "100%" }}>
@@ -119,18 +132,32 @@ export default function CreateLocationReminder() {
         </View>
         <SegmentedButton
           options={[
-            { label: "Arrival", value: "enter" },
-            { label: "Departure", value: "exit" },
+            { label: "Arrival", value: Flow.enter },
+            { label: "Departure", value: Flow.exit },
           ]}
-          selected={reminderType}
-          onSelectionChange={(val) => setReminderType(val as Flow)}
+          selected={reminderFlow}
+          onSelectionChange={(val) => setReminderFlow(val as Flow)}
         />
       </View>
       <View>
-        <ThemedText style={{ color: "red" }}>
-          {isFailedPermissions ?? searchError}
+        <ThemedText
+          type="error"
+          style={{ width: "75%", marginHorizontal: "auto", marginBottom: 10 }}
+        >
+          {searchError ?? submitError}
         </ThemedText>
         <ThemedButton label="Save" onPress={addLocationReminder} />
+        {editLocation && (
+          <ThemedButton
+            label="Delete"
+            type="secondary"
+            onPress={async () => {
+              await removeReminder(editLocation.id);
+              router.dismissAll();
+              router.replace("/");
+            }}
+          />
+        )}
       </View>
     </View>
   );

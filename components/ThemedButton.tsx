@@ -1,18 +1,24 @@
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Pressable, PressableProps, Text } from "react-native";
+import { Pressable, PressableProps } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { ReactNode } from "react";
 
 interface ThemedButtonProps extends PressableProps {
   label: ReactNode;
+  type?: "secondary";
 }
-export function ThemedButton({ label, style, ...rest }: ThemedButtonProps) {
+export function ThemedButton({
+  label,
+  type,
+  style,
+  ...rest
+}: ThemedButtonProps) {
   const theme = useThemeColor();
   return (
     <Pressable
       {...rest}
       style={{
-        backgroundColor: theme.primary,
+        ...(!type && { backgroundColor: theme.primary }),
         padding: 15,
         borderRadius: 50,
         ...(typeof style === "object" && { ...style }),
@@ -20,8 +26,13 @@ export function ThemedButton({ label, style, ...rest }: ThemedButtonProps) {
     >
       {typeof label === "string" ? (
         <ThemedText
-          type={["title"]}
-          style={{ color: theme.tertiary, textAlign: "center" }}
+          type={["subtitle"]}
+          style={{
+            ...(type === "secondary"
+              ? { color: theme.primary, fontSize: 16 }
+              : { color: theme.background }),
+            textAlign: "center",
+          }}
         >
           {label}
         </ThemedText>

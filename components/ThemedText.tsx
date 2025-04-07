@@ -6,7 +6,8 @@ type TypeOptions =
   | "defaultSemiBold"
   | "subtitle"
   | "link"
-  | "inverted";
+  | "inverted"
+  | "error";
 export type ThemedTextProps = TextProps & {
   type?: Array<TypeOptions> | TypeOptions;
 };
@@ -17,12 +18,19 @@ export function ThemedText({ type, style, ...rest }: ThemedTextProps) {
   return (
     <Text
       style={[
-        { color: type?.includes("inverted") ? theme.secondary : theme.text },
+        {
+          color: type?.includes("inverted")
+            ? theme.secondary
+            : type?.includes("error")
+            ? theme.error
+            : theme.text,
+        },
         !type ? styles.default : undefined,
         type?.includes("title") ? styles.title : undefined,
         type?.includes("defaultSemiBold") ? styles.defaultSemiBold : undefined,
         type?.includes("subtitle") ? styles.subtitle : undefined,
         type?.includes("link") ? styles.link : undefined,
+        type?.includes("error") ? styles.error : undefined,
         style,
       ]}
       {...rest}
@@ -48,5 +56,8 @@ const styles = StyleSheet.create({
   },
   link: {
     fontSize: 16,
+  },
+  error: {
+    textAlign: "center",
   },
 });

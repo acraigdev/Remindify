@@ -5,5 +5,8 @@ module.exports = {
   rules: {
     "no-unused-vars": "error",
     "react-hooks/exhaustive-deps": "error",
+    "no-redeclare": "off",
+    "@typescript-eslint/no-redeclare": "off",
+    "react/display-name": "off",
   },
 };
